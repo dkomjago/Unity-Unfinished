@@ -5,8 +5,8 @@ using UnityEngine;
 public class Behaviour_Door : MonoBehaviour {
 
     private Animator animator;
-    private new Collider2D collider ;
-    [SerializeField] private int lockLevel;
+    private new Collider2D collider;
+    public bool Unlocked { get; private set; }
     public bool IsBusy
     {
         get { return !animator.GetCurrentAnimatorStateInfo(0).IsName("Idle");}
@@ -18,14 +18,18 @@ public class Behaviour_Door : MonoBehaviour {
     }
 	
 	// Update is called once per frame
-	void Update () {
-		
-	}
+	void Update () {}
 
+    //Set off door animation
     public void Interact()
     {
-        animator.ResetTrigger("Operate");
-        animator.SetTrigger("Operate");
+        if (Unlocked)
+        {
+            animator.ResetTrigger("Operate");
+            animator.SetTrigger("Operate");
+        }
+        else
+            Debug.Log("Door is locked");
     }
 
     public void FullClose()
@@ -36,9 +40,9 @@ public class Behaviour_Door : MonoBehaviour {
             animator.SetBool("isClosed", false);
     }
 
-    public int CheckLock()
+    public bool CheckLock()
     {
-        return lockLevel;
+        return Unlocked;
     }
 
     public bool IsClosed()
@@ -58,12 +62,35 @@ public class Behaviour_Door : MonoBehaviour {
 
     public void Lock()
     {
-        lockLevel = 1;
+        if (Stats_PlayerGear.GetLockPickLevel() > 0)
+        {
+            UI_Lock.currentLock = GetComponent<Behaviour_Lock>();
+            UI_Lock.Instance.gameObject.SetActive(true);
+            UI_Lock.currentLock.untouched = false;
+        }
+        else
+            Debug.Log("Cant lock no lockpick");
     }
 
     public void Unlock()
     {
-        if (Stats_PlayerGear.GetLockPickLevel() >= lockLevel)
-            lockLevel = 0;
+        if (Stats_PlayerGear.GetLockPickLevel() >= 0)
+        {
+            UI_Lock.currentLock = GetComponent<Behaviour_Lock>();
+            UI_Lock.Instance.gameObject.SetActive(true);
+            UI_Lock.currentLock.untouched = false;
+        }
+        else
+            Debug.Log("Cant open no lockpick");
+    }
+
+    public void DisableLock()
+    {
+        Unlocked = true;
+    }
+
+    public void EnableLock()
+    {
+        Unlocked = false;
     }
 }

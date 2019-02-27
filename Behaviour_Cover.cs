@@ -5,10 +5,7 @@ using UnityEngine;
 public class Behaviour_Cover : MonoBehaviour {
 
     private bool inUse = false;
-    public bool InUse
-    {
-        get { return inUse; }
-    }
+    public bool InUse { get { return inUse; } }
     private new Collider2D collider2D;
     private Behaviour_Container containerScript;
     [SerializeField] private float rotateAngle;
@@ -17,16 +14,6 @@ public class Behaviour_Cover : MonoBehaviour {
     {
         collider2D = GetComponent<Collider2D>();
     }
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
     public void Pull()
     {
         containerScript = GetComponent<Behaviour_Container>();

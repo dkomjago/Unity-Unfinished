@@ -4,15 +4,24 @@ using UnityEngine;
 
 public class Controls_Character : MonoBehaviour {
 
-
+    #region Movement
     [SerializeField] private float maxSpeed = 10f; // Max movement speed (while Sprinting)
     [Range(0, 1)] [SerializeField] private float walkSpeed = .36f;     // Amount of maxSpeed applied to crouching movement. 1 = 100%
     [Range(0, 1)] [SerializeField] private float sneakSpeed = .36f; // Amount of maxSpeed applied to sneak movement(change in Editor)
+    public bool FacingRight
+    {
+        get { return facingRight; }
+    }
+    private bool facingRight = true;  // For determining which way the player is currently facing.
+    public static bool movementDisabled = false;
+    private bool isSprinting = false;
+
+    #region Stairs
     private bool onStairs = false; // Is character on stairs
     public bool OnStairs
     {
         get { return onStairs; }
-        set { onStairs = value;}
+        set { onStairs = value; }
     }
     private bool wantOnStairsUp = false; // Cues to use the stairs
     public bool WantOnStairsUp
@@ -28,36 +37,27 @@ public class Controls_Character : MonoBehaviour {
     public float StairsAngle
     {
         get { return Mathf.Deg2Rad * stairsAngle; }
-        set {
-                if (value != 0)
-                    stairsAngle = value;
-            }
+        set
+        {
+            if (value != 0)
+                stairsAngle = value;
+        }
     }
+    #endregion
+    #endregion
+
     [SerializeField] private bool isArmed; //unused
     [SerializeField] private float stepLoudness; // future use for behaviour_sound
     [SerializeField] private int tension; // decides stress growth
     [SerializeField] private float stress; // used for shaking hands etc.
-    private bool isSprinting = false;
-    public float Stress
-        {
-            get
-            {
-                 return stress;
-            }
-        }
+    public float Stress{get {return stress;} }
 
-    private Animator animator;            // Reference to the player's animator component.
+    private Animator animator; // Reference to the player's animator component.
     private new Rigidbody2D rigidbody2D;  // Rigidbody reference
     private new SpriteRenderer renderer; // Renderer reference
-    public bool FacingRight
-    {
-        get { return facingRight; }
-    }
-    private bool facingRight = true;  // For determining which way the player is currently facing.
+    private GameObject arms; // reference to character arms object
 
     private static bool isPaused; // used to stop movement and behaviour
-
-    private GameObject arms; // reference to character arms object
 
     private void Awake()
     {
@@ -84,17 +84,14 @@ public class Controls_Character : MonoBehaviour {
         }
     }
 
-
-    public void Move(float move, bool sneak) //Main move function - decides speed and direction
+    //Main move function - decides speed and direction
+    public void Move(float move, bool sneak)
     {
-        if (!isPaused)
+        if (!isPaused && !movementDisabled)
         {
             animator.SetBool("isSneaking", sneak);
-
             move = (isSprinting ? move : sneak ? move * sneakSpeed : move * walkSpeed);
-
-            // The Speed animator parameter is set to the absolute value of the horizontal input.
-            animator.SetFloat("Speed", Mathf.Abs(move));
+            animator.SetFloat("Speed", Mathf.Abs(move)); // The Speed animator parameter is set to the absolute value of the horizontal input.
             if (move != 0)
             {
                 if (onStairs)
@@ -107,38 +104,26 @@ public class Controls_Character : MonoBehaviour {
                     rigidbody2D.gravityScale = 10;
                     rigidbody2D.velocity = new Vector2(move * maxSpeed, 0);
                 }
-
-
             }
             else
                 rigidbody2D.velocity = Vector2.zero;
-
-
-
             Behavior_Sound.MakeSound(stepLoudness, transform.position);
-
-            // If the input is moving the player right and the player is facing left...
+            //Flip sprite according to movement
             if (move > 0 && !facingRight)
             {
-                // ... flip the player.
                 Flip();
             }
-            // Otherwise if the input is moving the player left and the player is facing right...
             else if (move < 0 && facingRight)
             {
-                // ... flip the player.
                 Flip();
             }
         }
     }
 
-
+    //Flip character sprite on x axis
     private void Flip()
     {
-        // Switch the way the player is labelled as facing.
         facingRight = !facingRight;
-
-        // Multiply the player's x local scale by -1.
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
@@ -150,7 +135,8 @@ public class Controls_Character : MonoBehaviour {
         }
     }
 
-    public void AddCriticalStress() // Instant heart pounding and shaking hands
+    // Instant heart pounding and shaking hands
+    public void AddCriticalStress() 
     {
         stress += 150;
     }
@@ -167,7 +153,7 @@ public class Controls_Character : MonoBehaviour {
 
     public void ToggleSprint()
     {
-        if (!isPaused)
+        if (!isPaused && !movementDisabled)
         {
             if (isSprinting)
             {
@@ -184,7 +170,8 @@ public class Controls_Character : MonoBehaviour {
         }
     }
 
-    public void TryStairs(float direction) // Limits stair accessibility
+    //Limits stair accessibility
+    public void TryStairs(float direction) 
     {
         if (direction>0)
         {
@@ -203,6 +190,7 @@ public class Controls_Character : MonoBehaviour {
         }
     }
 
+    //Make list of nearby actions available to the character
     public List<Info_Action> Action()
     {
         Physics2D.queriesHitTriggers = true;
@@ -220,15 +208,13 @@ public class Controls_Character : MonoBehaviour {
                     if (newScript.IsClosed())
                     {
                         actionList.Add(new Info_Action("Open", script));
-                        if (newScript.CheckLock() != 0)
+                        if (!newScript.CheckLock())
                             actionList.Add(new Info_Action("Unlock", script));
                         else
                             actionList.Add(new Info_Action("Lock", script));
                     }
                     else
-                    {
                         actionList.Add(new Info_Action("Close", script));
-                    }
                 }
                     continue;
             }
@@ -237,13 +223,9 @@ public class Controls_Character : MonoBehaviour {
             {
                 Behaviour_Switch newScript = (Behaviour_Switch)script;
                 if (newScript.Coded)
-                {
                     actionList.Add(new Info_Action("Hack", script));
-                }
                 else
-                {
                     actionList.Add(new Info_Action("Use", script));
-                }
             }
 
             script = hit.GetComponent<Behaviour_Container>();
@@ -266,5 +248,4 @@ public class Controls_Character : MonoBehaviour {
         Physics2D.queriesHitTriggers = false;
         return actionList;
     }
-
 }

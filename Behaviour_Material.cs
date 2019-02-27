@@ -4,19 +4,8 @@ using UnityEngine;
 
 public class Behaviour_Material : MonoBehaviour {
 
-    [SerializeField]
-    private GameObject sparkPrefab;
+    [SerializeField] private GameObject sparkPrefab;
     [SerializeField] private const int shotDistance = 10; //Shot distance after peneteration
-
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 
     public void Damage(Info_Shot shotInfo)
     {
