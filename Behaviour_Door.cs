@@ -11,13 +11,13 @@ public class Behaviour_Door : MonoBehaviour {
     {
         get { return !animator.GetCurrentAnimatorStateInfo(0).IsName("Idle");}
     }
-    // Use this for initialization
-    void Start () {
+
+    void Start ()
+    {
         animator = GetComponent<Animator>();
         collider = GetComponent<Collider2D>();
     }
 	
-	// Update is called once per frame
 	void Update () {}
 
     //Set off door animation
