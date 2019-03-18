@@ -40,8 +40,7 @@ public class Behaviour_LockPin : MonoBehaviour {
         upperPin.sizeDelta = new Vector2(upperPin.sizeDelta.x, upperPin.sizeDelta.y + pinRandomizer);
         holding = false;
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
         if (dropped) //If pin is picked adjust lower pin position
